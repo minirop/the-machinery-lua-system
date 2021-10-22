@@ -18,10 +18,16 @@ Currently, the only available callback is `update` that gets called every frame.
 
 ## Entity API
 
-All methods are called on an entity. In the `update` function, the entity on which the script is attached to is available via a variable named `entity`.
-⚠️ This variable is only valid inside `update`. ⚠️
+All methods are called on an entity. The entity on which the script is attached to is available via a variable named `entity`.
 
 ### transform component
 
 * `set_position(x, y, z)`: Moves an entity.
 * `set_rotation(x, y, z)`: Rotates an entity. All angles are in degrees.
+* `set_scale(x, y, z)`: Scale an entity.
+* `set_parent(parent_entity)`: Reparent an entity.
+* `get_position()`: Retrieve the position of an entity.
+* `get_rotation()`: Retrieve the position of an entity. All angles are in degrees.
+* `get_scale()`: Retrieve the position of an entity.
+
+All three `get_*` methods return 3 values (`x`, `y` and `z` in that order).

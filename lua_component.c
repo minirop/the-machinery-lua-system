@@ -67,6 +67,7 @@ static bool component__load_asset(tm_component_manager_o* man, struct tm_entity_
     luaL_openlibs(L);
 
     lua_sol__register(L);
+    lua_sol__set_entity(L, e);
 
     const tm_the_truth_object_o* asset_r = tm_tt_read(tt, asset);
     tm_tt_id_t id = tm_the_truth_api->get_reference(tt, asset_r, TM_TT_PROP__LUA_COMPONENT__SCRIPT);
@@ -137,9 +138,6 @@ static void engine_update__lua_component(tm_engine_o* inst, tm_engine_update_set
         for (uint32_t i = 0; i < a->n; ++i)
         {
             lua_State* L = lua_component[i].L;
-            tm_entity_t e = a->entities[i];
-
-            lua_sol__set_entity(L, e);
 
             lua_getglobal(L, "update");
             if (lua_isfunction(L, -1))
