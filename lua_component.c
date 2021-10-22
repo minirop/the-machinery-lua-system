@@ -63,11 +63,8 @@ void component__truth__create_types(struct tm_the_truth_o* tt)
 
 static bool component__load_asset(tm_component_manager_o* man, struct tm_entity_commands_o *commands, tm_entity_t e, void* c_vp, const tm_the_truth_o* tt, tm_tt_id_t asset)
 {
-    lua_State* L = luaL_newstate();
-    luaL_openlibs(L);
-
-    lua_sol__register(L);
-    lua_sol__set_entity(L, e);
+    struct tm_lua_component_t* c = c_vp;
+    lua_State* L = c->L;
 
     const tm_the_truth_object_o* asset_r = tm_tt_read(tt, asset);
     tm_tt_id_t id = tm_the_truth_api->get_reference(tt, asset_r, TM_TT_PROP__LUA_COMPONENT__SCRIPT);
@@ -93,10 +90,19 @@ static bool component__load_asset(tm_component_manager_o* man, struct tm_entity_
         }
     }
 
-    struct tm_lua_component_t* c = c_vp;
-    c->L = L;
-
     return true;
+}
+
+static void component__add(tm_component_manager_o *manager, struct tm_entity_commands_o *commands, tm_entity_t e, void *data)
+{
+    lua_State* L = luaL_newstate();
+    luaL_openlibs(L);
+
+    lua_sol__register(L);
+    lua_sol__set_entity(L, e);
+
+    struct tm_lua_component_t* c = data;
+    c->L = L;
 }
 
 static void component__remove(tm_component_manager_o *manager, struct tm_entity_commands_o *commands, tm_entity_t e, void *data)
@@ -111,6 +117,7 @@ void component__create(struct tm_entity_context_o* ctx)
         .name = TM_TT_TYPE__LUA_COMPONENT,
         .bytes = sizeof(struct tm_lua_component_t),
         .load_asset = component__load_asset,
+        .add = component__add,
         .remove = component__remove,
     };
 
