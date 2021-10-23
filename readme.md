@@ -14,7 +14,7 @@ You need `lua` and [`sol3`](https://github.com/ThePhD/sol2/). sol3 is header-onl
 
 ## Callbacks
 
-Currently, the only available callback is `update` that gets called every frame.
+Currently, the only available callback is `update` that gets called every frame. But initialisation code can be written outside of any function.
 
 ## Entity API
 
@@ -31,3 +31,14 @@ All methods are called on an entity. The entity on which the script is attached 
 * `get_scale()`: Retrieve the position of an entity.
 
 All three `get_*` methods return 3 values (`x`, `y` and `z` in that order).
+
+### light component
+
+* `set_light_color(r, g, b)`: Changes the light's color.
+
+## Properties
+
+You can declare a global variable named `properties` being a table where the key is the property's name and the value is the default value of the property. [Example](examples/properties.lua)  
+They will appear in the property tab of the lua component.
+
+⚠️ It doesn't do anything. They are displayed but not editable nor used/usable. ⚠️

@@ -11,12 +11,20 @@ struct tm_api_registry_api* tm_global_api_registry;
 struct tm_sprintf_api* tm_sprintf_api;
 struct tm_os_api* tm_os_api;
 struct tm_logger_api* tm_logger_api;
+struct tm_ui_api* tm_ui_api;
+struct tm_properties_view_api* tm_properties_view_api;
+struct tm_the_machinery_api* tm_the_machinery_api;
+struct tm_docking_api* tm_docking_api;
 
 #include <foundation/the_truth.h>
 #include <foundation/api_registry.h>
 
+#include <the_machinery/the_machinery.h>
 #include <plugins/entity/entity.h>
 #include <plugins/entity/transform_component.h>
+#include <plugins/ui/ui.h>
+#include <plugins/ui/docking.h>
+#include <plugins/editor_views/properties.h>
 #include <foundation/temp_allocator.h>
 #include <foundation/localizer.h>
 #include <foundation/asset_io.h>
@@ -30,6 +38,7 @@ struct tm_logger_api* tm_logger_api;
 #include "lua_component.h"
 #include "lua_script.h"
 #include "lua_importer.h"
+#include "lua_editor.h"
 
 TM_DLL_EXPORT void tm_load_plugin(struct tm_api_registry_api* reg, bool load)
 {
@@ -45,9 +54,14 @@ TM_DLL_EXPORT void tm_load_plugin(struct tm_api_registry_api* reg, bool load)
     tm_sprintf_api = tm_get_api(reg, tm_sprintf_api);
     tm_os_api = tm_get_api(reg, tm_os_api);
     tm_logger_api = tm_get_api(reg, tm_logger_api);
+    tm_ui_api = tm_get_api(reg, tm_ui_api);
+    tm_properties_view_api = tm_get_api(reg, tm_properties_view_api);
+    tm_the_machinery_api = tm_get_api(reg, tm_the_machinery_api);
+    tm_docking_api = tm_get_api(reg, tm_docking_api);
     tm_global_api_registry = reg;
 
     importer__register(load);
+    //editor__register(reg, load); // crashes TM
 
     tm_add_or_remove_implementation(reg, load, tm_the_truth_create_types_i, component__truth__create_types);
     tm_add_or_remove_implementation(reg, load, tm_the_truth_create_types_i, asset__truth__create_types);

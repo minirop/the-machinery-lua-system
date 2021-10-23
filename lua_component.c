@@ -4,9 +4,12 @@ extern struct tm_temp_allocator_api* tm_temp_allocator_api;
 extern struct tm_the_truth_api* tm_the_truth_api;
 extern struct tm_localizer_api* tm_localizer_api;
 extern struct tm_logger_api* tm_logger_api;
+extern struct tm_ui_api* tm_ui_api;
+extern struct tm_properties_view_api* tm_properties_view_api;
 
 #include <plugins/entity/entity.h>
 #include <plugins/entity/transform_component.h>
+#include <plugins/ui/ui.h>
 #include <plugins/editor_views/properties.h>
 #include <plugins/the_machinery_shared/component_interfaces/editor_ui_interface.h>
 
@@ -14,6 +17,7 @@ extern struct tm_logger_api* tm_logger_api;
 #include <foundation/carray.inl>
 #include <foundation/localizer.h>
 #include <foundation/math.inl>
+#include <foundation/rect.inl>
 #include <foundation/the_truth.h>
 #include <foundation/log.h>
 
@@ -44,7 +48,127 @@ static const char* component__category(void)
 }
 
 static tm_ci_editor_ui_i* editor_aspect = &(tm_ci_editor_ui_i){
-    .category = component__category
+    .category = component__category,
+};
+
+static const char *component__get_display_name(void)
+{
+    return TM_LOCALIZE("Lua script");
+}
+
+static float draw_lua_property(const char* name, lua_State* L, tm_properties_ui_args_t *args, tm_rect_t item_rect)
+{
+    tm_ui_o *ui = args->ui;
+    tm_ui_style_t *uistyle = args->uistyle;
+
+    const tm_rect_t label_r = tm_rect_split_left(item_rect, args->metrics[TM_PROPERTIES_METRIC_LABEL_WIDTH], args->metrics[TM_PROPERTIES_METRIC_MARGIN], 0);
+    const tm_rect_t control_r = tm_rect_split_left(item_rect, args->metrics[TM_PROPERTIES_METRIC_LABEL_WIDTH], args->metrics[TM_PROPERTIES_METRIC_MARGIN], 1);
+
+    int type = lua_type(L, -1);
+
+    if (type == LUA_TNUMBER)
+    {
+        tm_ui_api->label(ui, uistyle, &(tm_ui_label_t){ .rect = label_r, .text = name });
+
+        const tm_ui_spinner_t s = {
+            .id = tm_ui_api->make_id(ui),
+            .rect = control_r,
+        };
+
+        double initial = lua_tonumber(L, -1);
+        double value = initial;
+        enum tm_ui_interaction_result_t res = tm_ui_api->spinner(ui, uistyle, &s, &value, &initial);
+        if (res == TM_UI_INTERACTION_RESULT_COMMIT)
+        {
+            // TODO
+        }
+    }
+    else if (type == LUA_TSTRING)
+    {
+        tm_ui_api->label(ui, uistyle, &(tm_ui_label_t){ .rect = label_r, .text = name });
+
+        const tm_ui_textedit_t s = {
+            .id = tm_ui_api->make_id(ui),
+            .rect = control_r,
+        };
+
+        char buffer[128] = {};
+        strcpy(buffer, lua_tostring(L, -1));
+        if (tm_ui_api->textedit(ui, uistyle, &s, buffer, 128))
+        {
+            // TODO
+        }
+    }
+    else
+    {
+        return item_rect.y;
+    }
+
+    return item_rect.y + item_rect.h + 5;
+}
+
+static float component__custom_ui(tm_properties_ui_args_t *args, tm_rect_t item_rect, tm_tt_id_t object, uint32_t indent)
+{
+    item_rect.y = tm_properties_view_api->ui_object_default(args, item_rect, object, indent);
+
+    tm_the_truth_o *tt = args->tt;
+
+    const tm_the_truth_object_o* asset_r = tm_tt_read(tt, object);
+    tm_tt_id_t id = tm_the_truth_api->get_reference(tt, asset_r, TM_TT_PROP__LUA_COMPONENT__SCRIPT);
+    if (id.u64)
+    {
+        tm_tt_buffer_t buffer = tm_the_truth_api->get_buffer(tt, tm_tt_read(tt, id), TM_TT_PROP__LUA_SCRIPT__DATA);
+
+        lua_State* L = luaL_newstate();
+        luaL_openlibs(L);
+
+        lua_sol__register(L);
+
+        luaL_loadbuffer(L, buffer.data, buffer.size, "reading properties");
+        if (lua_isfunction(L, -1))
+        {
+            if (lua_pcall(L, 0, 0, 0) == LUA_OK)
+            {
+                lua_getglobal(L, "properties");
+
+                if (lua_istable(L, -1))
+                {
+                    lua_pushvalue(L, -1);
+                    lua_pushnil(L);
+                    while (lua_next(L, -2))
+                    {
+                        lua_pushvalue(L, -2);
+
+                        const char *name = lua_tostring(L, -1);
+                        lua_pop(L, 1);
+
+                        item_rect.y = draw_lua_property(name, L, args, item_rect);
+
+                        lua_pop(L, 1);
+                    }
+                }
+
+                lua_pop(L, -1);
+            }
+            else
+            {
+                lua_pop(L, 1);
+            }
+        }
+        else
+        {
+            lua_pop(L, 1);
+        }
+
+        lua_close(L);
+    }
+
+    return item_rect.y;
+}
+
+static tm_properties_aspect_i *properties_aspect = &(tm_properties_aspect_i){
+    .get_type_display_name = component__get_display_name,
+    .custom_ui = component__custom_ui,
 };
 
 void component__truth__create_types(struct tm_the_truth_o* tt)
@@ -58,6 +182,7 @@ void component__truth__create_types(struct tm_the_truth_o* tt)
     tm_the_truth_api->set_default_object(tt, lua_component_type, default_object);
 
     tm_the_truth_api->set_aspect(tt, lua_component_type, TM_CI_EDITOR_UI, editor_aspect);
+    tm_the_truth_api->set_aspect(tt, lua_component_type, TM_TT_ASPECT__PROPERTIES, properties_aspect);
     tm_the_truth_api->set_property_aspect(tt, lua_component_type, TM_TT_PROP__LUA_COMPONENT__SCRIPT, TM_TT_PROP_ASPECT__PROPERTIES__ASSET_PICKER, TM_TT_TYPE__LUA_SCRIPT);
 }
 
