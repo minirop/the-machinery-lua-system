@@ -3,6 +3,7 @@
 #include <sol/sol.hpp>
 
 #include "lua_transform.h"
+#include "lua_light.h"
 
 void lua_sol__register(lua_State* L)
 {
@@ -16,6 +17,8 @@ void lua_sol__register(lua_State* L)
 	entity_type["get_rotation"] = lua_transform__get_rotation;
 	entity_type["get_scale"]    = lua_transform__get_scale;
 	entity_type["set_parent"]   = lua_transform__set_parent;
+
+	entity_type["set_light_color"] = lua_light__set_color;
 }
 
 void lua_sol__set_entity(lua_State* L, tm_entity_t entity)
