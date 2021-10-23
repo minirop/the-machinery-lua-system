@@ -1,3 +1,5 @@
 #pragma once
 
-void lua_light__set_color(tm_entity_t* entity, float r, float g, float b);
+#include "lua_sol_types.h"
+
+void lua_light__register(sol::state_view & lua, sol::usertype<tm_entity_t> & entity_type);
