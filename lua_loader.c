@@ -61,7 +61,7 @@ TM_DLL_EXPORT void tm_load_plugin(struct tm_api_registry_api* reg, bool load)
     tm_global_api_registry = reg;
 
     importer__register(load);
-    //editor__register(reg, load); // crashes TM
+    editor__register(reg, load);
 
     tm_add_or_remove_implementation(reg, load, tm_the_truth_create_types_i, component__truth__create_types);
     tm_add_or_remove_implementation(reg, load, tm_the_truth_create_types_i, asset__truth__create_types);

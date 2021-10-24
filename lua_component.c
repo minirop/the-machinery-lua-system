@@ -66,10 +66,17 @@ static float draw_lua_property(const char* name, lua_State* L, tm_properties_ui_
 
     int type = lua_type(L, -1);
 
+    switch (type)
+    {
+    case LUA_TNUMBER:
+    case LUA_TSTRING:
+    case LUA_TTABLE:
+        tm_ui_api->label(ui, uistyle, &(tm_ui_label_t){ .rect = label_r, .text = name });
+        break;
+    }
+
     if (type == LUA_TNUMBER)
     {
-        tm_ui_api->label(ui, uistyle, &(tm_ui_label_t){ .rect = label_r, .text = name });
-
         const tm_ui_spinner_t s = {
             .id = tm_ui_api->make_id(ui),
             .rect = control_r,
@@ -85,8 +92,6 @@ static float draw_lua_property(const char* name, lua_State* L, tm_properties_ui_
     }
     else if (type == LUA_TSTRING)
     {
-        tm_ui_api->label(ui, uistyle, &(tm_ui_label_t){ .rect = label_r, .text = name });
-
         const tm_ui_textedit_t s = {
             .id = tm_ui_api->make_id(ui),
             .rect = control_r,
@@ -95,6 +100,50 @@ static float draw_lua_property(const char* name, lua_State* L, tm_properties_ui_
         char buffer[128] = {};
         strcpy(buffer, lua_tostring(L, -1));
         if (tm_ui_api->textedit(ui, uistyle, &s, buffer, 128))
+        {
+            // TODO
+        }
+    }
+    else if (type == LUA_TTABLE)
+    {
+        lua_len(L, -1);
+        int size = lua_tointeger(L, -1);
+        lua_pop(L, 1);
+
+        const char* items[size];
+        memset(items, 0, size*sizeof(const char*));
+
+        int index = 0;
+        lua_pushnil(L);
+        while (lua_next(L, -2))
+        {
+            items[index++] = lua_tostring(L, -1);
+            lua_pop(L, 1);
+        }
+
+        const tm_ui_dropdown_t c = {
+            .id = tm_ui_api->make_id(ui),
+            .rect = control_r,
+            .num_items = size,
+            .items = items,
+        };
+
+        uint32_t selected = 0;
+        if (tm_ui_api->dropdown(ui, uistyle, &c, &selected))
+        {
+            // TODO
+        }
+    }
+    else if (type == LUA_TBOOLEAN)
+    {
+        const tm_ui_checkbox_t c = {
+            .id = tm_ui_api->make_id(ui),
+            .rect = item_rect,
+            .text = name,
+        };
+
+        bool checked = lua_toboolean(L, -1);
+        if (tm_ui_api->checkbox(ui, uistyle, &c, &checked))
         {
             // TODO
         }
@@ -133,16 +182,19 @@ static float component__custom_ui(tm_properties_ui_args_t *args, tm_rect_t item_
 
                 if (lua_istable(L, -1))
                 {
-                    lua_pushvalue(L, -1);
                     lua_pushnil(L);
                     while (lua_next(L, -2))
                     {
-                        lua_pushvalue(L, -2);
-
-                        const char *name = lua_tostring(L, -1);
-                        lua_pop(L, 1);
-
-                        item_rect.y = draw_lua_property(name, L, args, item_rect);
+                        if (lua_istable(L, -1))
+                        {
+                            lua_pushnil(L);
+                            if (lua_next(L, -2))
+                            {
+                                const char *name = lua_tostring(L, -2);
+                                item_rect.y = draw_lua_property(name, L, args, item_rect);
+                                lua_pop(L, 2);
+                            }
+                        }
 
                         lua_pop(L, 1);
                     }

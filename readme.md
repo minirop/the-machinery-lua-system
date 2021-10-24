@@ -48,6 +48,7 @@ All three `get_*` methods return 3 values (`x`, `y` and `z` in that order).
 ## Properties
 
 You can declare a global variable named `properties` being a table where the key is the property's name and the value is the default value of the property. [Example](examples/properties.lua)  
+Values can be a number, a string, a boolean or a table of strings.  
 They will appear in the property tab of the lua component.
 
 ⚠️ It doesn't do anything. They are displayed but not editable nor used/usable. ⚠️
