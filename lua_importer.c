@@ -79,11 +79,10 @@ static void task__import_lua(void *data, uint64_t task_id)
 
         if (read == (int64_t)stat.size)
         {
-        	const uint32_t buffer_id = buffers->add(buffers->inst, buffer, stat.size, 0);
             const tm_tt_type_t plugin_asset_type = tm_the_truth_api->object_type_from_name_hash(tt, TM_TT_TYPE_HASH__LUA_SCRIPT);
             const tm_tt_id_t asset_id = tm_the_truth_api->create_object_of_type(tt, plugin_asset_type, TM_TT_NO_UNDO_SCOPE);
             tm_the_truth_object_o *asset_obj = tm_the_truth_api->write(tt, asset_id);
-            tm_the_truth_api->set_buffer(tt, asset_obj, TM_TT_PROP__LUA_SCRIPT__DATA, buffer_id);
+            tm_the_truth_api->set_string(tt, asset_obj, TM_TT_PROP__LUA_SCRIPT__TEXT, buffer);
             if (args->reimport_into.u64)
             {
                 tm_the_truth_api->retarget_write(tt, asset_obj, args->reimport_into);

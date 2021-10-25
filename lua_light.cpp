@@ -23,6 +23,8 @@ static void lua_light__set_color_type(tm_entity_t* entity, int type);
 static int lua_light__get_color_type(tm_entity_t* entity);
 static void lua_light__set_color(tm_entity_t* entity, float r, float g, float b);
 static lua_vec3 lua_light__get_color(tm_entity_t* entity);
+static void lua_light__set_enabled(tm_entity_t* entity, bool enabled);
+static bool lua_light__is_enabled(tm_entity_t* entity);
 
 void lua_light__register(sol::state_view & lua, sol::usertype<tm_entity_t> & entity_type)
 {
@@ -34,6 +36,8 @@ void lua_light__register(sol::state_view & lua, sol::usertype<tm_entity_t> & ent
     entity_type["get_light_color_type"] = lua_light__get_color_type;
     entity_type["set_light_color"] = lua_light__set_color;
     entity_type["get_light_color"] = lua_light__get_color;
+    entity_type["set_light_enabled"] = lua_light__set_enabled;
+    entity_type["is_light_enabled"] = lua_light__is_enabled;
 
     lua["light"] = lua.create_table_with(
         "point", TM_LIGHT_TYPE_POINT,
@@ -111,4 +115,16 @@ lua_vec3 lua_light__get_color(tm_entity_t* entity)
     LUA_LIGHT_COMPONENT(std::make_tuple(0, 0, 0))
     tm_vec3_t vec = lc->color_rgb;
     return std::make_tuple(vec.x, vec.y, vec.z);
+}
+
+void lua_light__set_enabled(tm_entity_t* entity, bool enabled)
+{
+    LUA_LIGHT_COMPONENT()
+    lc->enabled = enabled;
+}
+
+bool lua_light__is_enabled(tm_entity_t* entity)
+{
+    LUA_LIGHT_COMPONENT(false)
+    return lc->enabled;
 }

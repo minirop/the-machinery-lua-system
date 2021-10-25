@@ -166,14 +166,14 @@ static float component__custom_ui(tm_properties_ui_args_t *args, tm_rect_t item_
     tm_tt_id_t id = tm_the_truth_api->get_reference(tt, asset_r, TM_TT_PROP__LUA_COMPONENT__SCRIPT);
     if (id.u64)
     {
-        tm_tt_buffer_t buffer = tm_the_truth_api->get_buffer(tt, tm_tt_read(tt, id), TM_TT_PROP__LUA_SCRIPT__DATA);
+        const char *text = tm_the_truth_api->get_string(tt, tm_tt_read(tt, id), TM_TT_PROP__LUA_SCRIPT__TEXT);
 
         lua_State* L = luaL_newstate();
         luaL_openlibs(L);
 
         lua_sol__register(L);
 
-        luaL_loadbuffer(L, buffer.data, buffer.size, "reading properties");
+        luaL_loadstring(L, text);
         if (lua_isfunction(L, -1))
         {
             if (lua_pcall(L, 0, 0, 0) == LUA_OK)
@@ -247,8 +247,8 @@ static bool component__load_asset(tm_component_manager_o* man, struct tm_entity_
     tm_tt_id_t id = tm_the_truth_api->get_reference(tt, asset_r, TM_TT_PROP__LUA_COMPONENT__SCRIPT);
     if (id.u64)
     {
-        tm_tt_buffer_t buffer = tm_the_truth_api->get_buffer(tt, tm_tt_read(tt, id), TM_TT_PROP__LUA_SCRIPT__DATA);
-        luaL_loadbuffer(L, buffer.data, buffer.size, "<asset name>");
+        const char* text = tm_the_truth_api->get_string(tt, tm_tt_read(tt, id), TM_TT_PROP__LUA_SCRIPT__TEXT);
+        luaL_loadstring(L, text);
         if (lua_isfunction(L, -1))
         {
             if (lua_pcall(L, 0, 0, 0))
@@ -334,7 +334,6 @@ static void engine_update__lua_component(tm_engine_o* inst, tm_engine_update_set
             }
             else
             {
-                tm_logger_api->printf(TM_LOG_TYPE_ERROR, "`update` function not found!\n");
                 lua_pop(L, 1);
             }
         }

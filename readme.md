@@ -42,6 +42,8 @@ All three `get_*` methods return 3 values (`x`, `y` and `z` in that order).
 * `set_light_unit_type()`: Retrieves the light's unit.
 * `set_light_color_type()`: Retrieves the light's color type.
 * `get_light_color()`: Retrieves the light's color. Returns 3 values (`r`, `g` and `b` in that order).
+* `set_light_enabled(bool)`: Enables or disables the light source (`true` = on, `false` = off)
+* `is_light_enabled()`: Tells you if the light source is enabled or not.
 
 ⚠️ Not all units are supported by all types, see the [documentation](https://ourmachinery.com//apidoc/plugins/default_render_pipe/light_component.h.html#enumtm_light_component_unit_type). 
 

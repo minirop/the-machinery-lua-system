@@ -7,7 +7,7 @@
 
 enum
 {
-    TM_TT_PROP__LUA_SCRIPT__DATA,
+    TM_TT_PROP__LUA_SCRIPT__TEXT,
 };
 
 struct tm_the_truth_o;
